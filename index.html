@@ -52,13 +52,17 @@ summary{cursor:pointer;font-weight:700;color:var(--muted)}
 .lvl{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:10px}
 .lvl-h{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;align-items:baseline}
 .lvl-h h2{font-family:var(--f-display);font-size:1.5rem;margin:0}
-.lvl-h .meta{font-size:.88rem;color:var(--muted);font-variant-numeric:tabular-nums}
-.lvl-h .meta b{color:var(--fg)}
+.lvl-h .meta{display:flex;flex-wrap:wrap;gap:6px;font-size:.8rem;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.lvl-h .meta span{border:1px solid var(--line);border-radius:5px;padding:1px 7px;color:var(--fg);white-space:nowrap}
+.lvl-h .meta small{color:var(--muted);font-size:.85em}
+.lvl-h .meta .c{background:var(--hay-soft);border-color:transparent}
+.lvl-h .meta .pp{background:var(--meadow-soft);border-color:transparent}
 ol.steps{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
 .step{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--bg)}
 .step .n{font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
 .step .f{font-weight:700}
-.step .e{font-family:var(--f-mono);font-size:.78rem;color:var(--muted)}
+.step .e{font-family:var(--f-mono);font-size:.66rem;color:var(--muted);opacity:.85;align-self:flex-end;line-height:1.3}
+.step .e small{font-family:var(--f-body);font-size:.9em;margin-left:2px}
 .step.p{border-color:var(--meadow);background:var(--meadow-soft)}
 .pchip{font-family:var(--f-mono);font-size:.75rem;font-weight:500;background:var(--meadow);color:var(--panel);border-radius:4px;padding:1px 5px}
 .dot{width:10px;height:10px;border-radius:50%;flex:none}
@@ -78,7 +82,6 @@ ol.steps{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
       </label>
       <label for="maxP">Max probiotik za den<input id="maxP" type="number" min="0" max="9" value="3" inputmode="numeric"></label>
       <label for="maxN">Max krmení za den<input id="maxN" type="number" min="1" max="10" value="10" inputmode="numeric"></label>
-      <label for="res">Rezerva expů na level<input id="res" type="number" min="0" max="200" value="5" inputmode="numeric"></label>
       <button type="submit">Spočítat</button>
     </div>
     <details>
@@ -88,7 +91,7 @@ ol.steps{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
         <p class="hint">Potřeba levelu = (1200 + 16 × (level − 50)) × (100 − snížení) %, zaokrouhleno. Level 50 = 396 expů, level 150 = 924 expů.</p>
         <div class="feeds" id="feeds"></div>
         <div class="efftbl"><table id="eff"></table></div>
-        <p class="hint">Přebytek expů nad potřebu levelu propadá. Probiotika se dávají na poslední krmení dne, kde nejvíc zvednou efektivitu.</p>
+        <p class="hint">Každý level dostane rezervu aspoň 5 expů nad potřebu. Přebytek expů nad potřebu levelu propadá. Probiotika se dávají na poslední krmení dne, kde nejvíc zvednou efektivitu.</p>
       </div>
     </details>
   </form>
@@ -116,7 +119,8 @@ $("eff").innerHTML=`<tr><th>Krmení</th>${EFF_P.map((_,i)=>`<th>${i+1}.</th>`).j
 <tr><th>S probiotikem %</th>${EFF_P.map((v,i)=>`<td><input id="ep${i}" type="number" step="0.01" value="${v}"></td>`).join("")}</tr>
 <tr><th>Bez probiotika %</th>${EFF_N.map((v,i)=>`<td><input id="en${i}" type="number" step="0.01" value="${v}"></td>`).join("")}</tr>`;
 
-const IDS=["lvFrom","lvTo","maxP","maxN","res","mult"];
+const IDS=["lvFrom","lvTo","maxP","maxN","mult"];
+const RES=5;
 try{const s=JSON.parse(localStorage.getItem("krmeni-v1")||"{}");IDS.forEach(k=>{if(s[k]!=null)$(k).value=s[k]})}catch(e){}
 
 function need(l,mult){return Math.round((1200+16*(l-50))*(100-mult)/100)}
@@ -155,7 +159,7 @@ function solve(reqs,feeds,effN,effP,maxN,maxP){
 
 function run(){
   const from=+$("lvFrom").value,to=+$("lvTo").value,maxP=Math.max(0,+$("maxP").value|0),
-        maxN=Math.min(10,Math.max(1,+$("maxN").value|0)),res=Math.max(0,+$("res").value||0),mult=+$("mult").value||0;
+        maxN=Math.min(10,Math.max(1,+$("maxN").value|0)),res=RES,mult=+$("mult").value||0;
   try{localStorage.setItem("krmeni-v1",JSON.stringify(Object.fromEntries(IDS.map(k=>[k,$(k).value]))))}catch(e){}
   const out=$("out");
   if(!(from>=50&&to<=150&&from<=to)){out.innerHTML=`<div class="err">Zadej rozsah levelů mezi 50 a 150, kde „od“ není větší než „do“.</div>`;return}
@@ -164,18 +168,18 @@ function run(){
   const levels=[];for(let l=from;l<=to;l++)levels.push(l);
   const base=levels.map(l=>need(l,mult));
   const b=solve(base.map(r=>r+res),feeds,effN,effP,maxN,maxP);
-  if(!b){out.innerHTML=`<div class="err">Levely ${from}–${to} se do ${maxN} krmení za den nevejdou. Zkrať rozsah, nebo sniž rezervu.</div>`;return}
+  if(!b){out.innerHTML=`<div class="err">Levely ${from}–${to} se do ${maxN} krmení za den nevejdou. Zkrať rozsah, nebo přidej krmení či probiotika.</div>`;return}
   let totalExp=0;
   const cards=levels.map((l,li)=>{
     const steps=b.path.filter(s=>s[1]===li);
     let ex=0,cost=0,pc=0;
     const items=steps.map(([fi,,i])=>{
       const f=feeds[fi],isP=i>=b.n-b.p,e=f.exp*b.eff[i];ex+=e;cost+=f.cost;if(isP)pc++;
-      return `<li class="step${isP?" p":""}"><span class="n">${i+1}.</span><span class="dot" style="background:${f.color}"></span><span class="f">${f.name}</span>${isP?'<span class="pchip">+P</span>':""}<span class="e">${fmt(e)}</span></li>`;
+      return `<li class="step${isP?" p":""}"><span class="n">${i+1}.</span><span class="dot" style="background:${f.color}"></span><span class="f">${f.name}</span>${isP?'<span class="pchip">+P</span>':""}<span class="e">${fmt(e)}<small>expů</small></span></li>`;
     }).join("");
     totalExp+=ex;
     return `<article class="lvl"><div class="lvl-h"><h2>Level ${l}</h2>
-      <div class="meta">potřeba <b>${base[li]}</b> · získáš <b>${fmt(ex)}</b> (+${fmt(ex-base[li])}) · <b>${fmt(cost,cost%1?1:0)}</b> sena${pc?` · <b>${pc}</b> probiotik`:""}</div></div>
+      <div class="meta"><span title="získané / potřebné expy">${fmt(ex,0)}/${base[li]}</span><span class="c">${fmt(cost,cost%1?1:0)} <small>sena</small></span>${pc?`<span class="pp">${pc}×P</span>`:""}</div></div>
       <ol class="steps">${items}</ol></article>`;
   }).join("");
   out.innerHTML=`<div class="summary">
@@ -184,7 +188,7 @@ function run(){
     <div class="stat"><div class="k">Krmení</div><div class="v">${b.n} / ${maxN}</div></div>
     <div class="stat"><div class="k">Expy získáš / potřeba</div><div class="v">${fmt(totalExp,0)} / ${base.reduce((a,c)=>a+c,0)}</div></div>
   </div>
-  <p class="legend"><span>Číslo = pořadí krmení v daném dni.</span><span><span class="pchip">+P</span> použij probiotikum</span><span>Malé číslo vpravo = získané expy.</span></p>
+  <p class="legend"><span>Číslo = pořadí krmení v daném dni.</span><span><span class="pchip">+P</span> použij probiotikum</span></p>
   <div class="levels">${cards}</div>`;
 }
 $("frm").addEventListener("submit",e=>{e.preventDefault();run()});
