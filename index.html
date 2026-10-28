@@ -2,140 +2,415 @@
 <title>Krmení mounta</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Nunito+Sans:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Nunito+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap">
 <style>
-/* Layout: ovládací panel nahoře, pod ním souhrn a karty levelů s pořadím krmení */
+/* Layout: na PC lepivý ovládací panel vlevo a denní plán vpravo; na mobilu pod sebou.
+   Plán = souhrn dne, pak levely jako odškrtávací seznam krmení s pruhem naplnění levelu. */
 :root{
-  --bg:#f6f5ee; --panel:#ffffff; --fg:#22261d; --muted:#6b705f; --line:#dedcc9;
-  --hay:#c9971c; --hay-soft:#f6ebc8; --meadow:#3f7a3a; --meadow-soft:#e2eedc; --bad:#b4442f; --bad-soft:#f7e1dc;
+  --bg:#f3f3ec; --panel:#ffffff; --sunk:#ecebe1; --fg:#20241b; --muted:#666b5b; --faint:#9a9e8c; --line:#dcdbc9;
+  --hay:#c39016; --hay-soft:#f5e9c2; --hay-ink:#6e5208;
+  --meadow:#3c7636; --meadow-ink:#2c5a28; --meadow-soft:#dfecd8; --on-accent:#ffffff;
+  --bad:#ad3f2b; --bad-soft:#f6dfd9;
+  --c-jablko:#c4453a; --c-zensen:#a5713c; --c-mrkev:#de7726; --c-seno:#c49b1d; --c-leaf:#4f8a3c;
   --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
   --f-body:"Nunito Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --r:10px;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#171a14; --panel:#20241c; --fg:#ecebdf; --muted:#a3a693; --line:#353a2e;
-  --hay:#e2b443; --hay-soft:#3a3218; --meadow:#7fbf73; --meadow-soft:#22341f; --bad:#ec8a73; --bad-soft:#3d221c; color-scheme:dark}}
+  --bg:#151812; --panel:#1e221a; --sunk:#191c15; --fg:#ebeadd; --muted:#a4a794; --faint:#6f7363; --line:#33382c;
+  --hay:#e0b23f; --hay-soft:#382f15; --hay-ink:#f0d283;
+  --meadow:#78b96c; --meadow-ink:#a4d79a; --meadow-soft:#20321d; --on-accent:#10150d;
+  --bad:#ec8a73; --bad-soft:#3b211b;
+  --c-jablko:#e2685c; --c-zensen:#cc955c; --c-mrkev:#f09449; --c-seno:#e0b23f; --c-leaf:#7fbf6a; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#171a14; --panel:#20241c; --fg:#ecebdf; --muted:#a3a693; --line:#353a2e;
-  --hay:#e2b443; --hay-soft:#3a3218; --meadow:#7fbf73; --meadow-soft:#22341f; --bad:#ec8a73; --bad-soft:#3d221c; color-scheme:dark}
-body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5}
-.wrap{max-width:880px;margin:0 auto;padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:20px}
-h1{font-family:var(--f-display);font-weight:700;font-size:2.4rem;line-height:1;margin:0;letter-spacing:.01em;text-wrap:balance}
-.sub{color:var(--muted);margin:6px 0 0}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
-.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;align-items:end}
-label{display:grid;gap:5px;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-input{font:inherit;font-size:1.05rem;font-family:var(--f-mono);padding:9px 10px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--fg);width:100%;box-sizing:border-box}
-input:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--hay);outline-offset:2px}
-.range{display:flex;align-items:center;gap:6px}
-.range span{color:var(--muted);font-weight:700}
-button{font:inherit;font-weight:700;padding:10px 16px;border-radius:7px;border:0;background:var(--meadow);color:var(--panel);cursor:pointer}
-button:hover{filter:brightness(1.08)}
-details{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
-summary{cursor:pointer;font-weight:700;color:var(--muted)}
-.settings{display:grid;gap:16px;margin-top:12px}
-.feeds{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
-.feed{display:grid;grid-template-columns:1fr 1fr;gap:6px;border:1px solid var(--line);border-radius:8px;padding:10px}
-.feed b{grid-column:1/-1;font-family:var(--f-display);font-size:1.15rem}
-.efftbl{overflow-x:auto}
-.efftbl table{border-collapse:collapse;font-size:.85rem}
-.efftbl th,.efftbl td{padding:4px 6px;border-bottom:1px solid var(--line);text-align:center}
-.efftbl input{width:74px;font-size:.85rem;padding:4px 6px}
-.hint{font-size:.85rem;color:var(--muted);margin:0}
-.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
-.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
-.stat .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700}
-.stat .v{font-family:var(--f-display);font-size:2rem;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
-.stat.hay{background:var(--hay-soft);border-color:transparent}
-.err{background:var(--bad-soft);color:var(--bad);border-radius:10px;padding:14px 16px;font-weight:600}
-.levels{display:grid;gap:12px}
-.lvl{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:10px}
-.lvl-h{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;align-items:baseline}
-.lvl-h h2{font-family:var(--f-display);font-size:1.5rem;margin:0}
-.lvl-h .meta{display:flex;flex-wrap:wrap;gap:6px;font-size:.8rem;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
-.lvl-h .meta span{border:1px solid var(--line);border-radius:5px;padding:1px 7px;color:var(--fg);white-space:nowrap}
-.lvl-h .meta small{color:var(--muted);font-size:.85em}
-.lvl-h .meta .c{background:var(--hay-soft);border-color:transparent}
-.lvl-h .meta .pp{background:var(--meadow-soft);border-color:transparent}
-ol.steps{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
-.step{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--bg)}
-.step .n{font-family:var(--f-mono);font-size:.8rem;color:var(--muted)}
-.step .f{font-weight:700}
-.step .e{font-family:var(--f-mono);font-size:.66rem;color:var(--muted);opacity:.85;align-self:flex-end;line-height:1.3}
-.step .e small{font-family:var(--f-body);font-size:.9em;margin-left:2px}
-.step.p{border-color:var(--meadow);background:var(--meadow-soft)}
-.pchip{font-family:var(--f-mono);font-size:.75rem;font-weight:500;background:var(--meadow);color:var(--panel);border-radius:4px;padding:1px 5px}
-.dot{width:10px;height:10px;border-radius:50%;flex:none}
-.legend{font-size:.85rem;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  --bg:#151812; --panel:#1e221a; --sunk:#191c15; --fg:#ebeadd; --muted:#a4a794; --faint:#6f7363; --line:#33382c;
+  --hay:#e0b23f; --hay-soft:#382f15; --hay-ink:#f0d283;
+  --meadow:#78b96c; --meadow-ink:#a4d79a; --meadow-soft:#20321d; --on-accent:#10150d;
+  --bad:#ec8a73; --bad-soft:#3b211b;
+  --c-jablko:#e2685c; --c-zensen:#cc955c; --c-mrkev:#f09449; --c-seno:#e0b23f; --c-leaf:#7fbf6a; color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.app{max-width:1100px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* hlavička */
+.top{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.mark{width:46px;height:46px;flex:none;border-radius:12px;background:var(--hay-soft);display:grid;place-items:center}
+.mark svg{width:30px;height:30px}
+.top h1{font-family:var(--f-display);font-weight:700;font-size:2.3rem;line-height:1;margin:0;letter-spacing:.005em}
+.top p{margin:3px 0 0;color:var(--muted);font-size:.93rem}
+.mswitch{margin-left:auto;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 14px 6px 8px;font-weight:800;font-size:.95rem;transition:border-color .12s,background .12s}
+.mswitch svg{width:24px;height:24px}
+.mswitch small{font-weight:700;font-size:.75rem;color:var(--muted);border-left:1px solid var(--line);padding-left:8px}
+.mswitch:hover{border-color:var(--meadow);background:var(--meadow-soft)}
+
+/* úvodní obrazovka */
+.intro{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding-block:32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.intro-in{width:100%;max-width:720px;display:grid;gap:26px}
+.intro-h{display:grid;justify-items:center;text-align:center;gap:10px}
+.intro-h .mark{width:58px;height:58px;border-radius:16px}
+.intro-h .mark svg{width:38px;height:38px}
+.intro-h h1{font-family:var(--f-display);font-weight:700;font-size:2.8rem;line-height:1;margin:0;text-wrap:balance}
+.intro-h p{margin:0;color:var(--muted);font-size:1.05rem}
+.picks{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pick{display:grid;justify-items:start;gap:6px;text-align:left;background:var(--panel);border:1.5px solid var(--line);border-radius:18px;padding:22px 22px 18px;transition:border-color .15s,transform .15s,box-shadow .15s}
+.pick:hover{border-color:var(--meadow);transform:translateY(-2px);box-shadow:0 10px 24px -14px var(--meadow)}
+.pick.sel{border-color:var(--meadow);box-shadow:0 0 0 3px var(--meadow-soft)}
+.pick .pi{width:52px;height:52px;margin-bottom:6px}
+.pick .pn{font-family:var(--f-display);font-weight:700;font-size:2.4rem;line-height:1}
+.pick .pd{font-weight:700;color:var(--fg)}
+.pick .ps{font-family:var(--f-mono);font-size:.78rem;color:var(--muted)}
+.pick .go{margin-top:10px;font-weight:800;color:var(--meadow-ink);font-size:.92rem}
+.intro-note{text-align:center;margin:0;color:var(--faint);font-size:.85rem}
+.plan-h h2 .mn{color:var(--meadow-ink)}
+.plan-h h2 .sep{color:var(--faint);margin:0 .3em}
+
+.layout{display:grid;grid-template-columns:310px minmax(0,1fr);gap:24px;align-items:start}
+
+/* ovládací panel */
+.ctrl{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px 18px 10px}
+.grp{border:0;margin:0;padding:16px 0;border-bottom:1px solid var(--line);display:grid;gap:10px;min-width:0}
+.grp:last-of-type{border-bottom:0}
+.lbl{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);padding:0}
+.lbl-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.lbl-row .val{font-family:var(--f-mono);font-size:.78rem;color:var(--faint)}
+
+input{font:inherit;color:var(--fg)}
+input[type=number]{-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;appearance:none;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--hay);outline-offset:2px}
+
+.num{display:flex;align-items:stretch;height:44px;border:1px solid var(--line);border-radius:9px;background:var(--sunk);overflow:hidden;min-width:0}
+.num:focus-within{border-color:var(--hay);box-shadow:0 0 0 3px var(--hay-soft)}
+.num input{flex:1;min-width:0;border:0;background:transparent;text-align:center;font-family:var(--f-mono);font-weight:600;font-size:1.05rem;padding:0}
+.num input:focus-visible{outline:none}
+.sb{flex:none;width:38px;border:0;background:transparent;color:var(--muted);font-family:var(--f-mono);font-size:1.2rem;line-height:1;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:background .12s,color .12s}
+.sb:hover{background:var(--hay-soft);color:var(--hay-ink)}
+.sb:active{background:var(--line)}
+.range{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.range .dash{color:var(--faint);font-weight:700}
+.daynav{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ghost{border:1px solid var(--line);background:transparent;border-radius:8px;padding:7px 10px;font-size:.85rem;font-weight:700;color:var(--muted);transition:border-color .12s,color .12s,background .12s}
+.ghost:hover{border-color:var(--meadow);color:var(--meadow-ink);background:var(--meadow-soft)}
+.ghost:disabled{opacity:.4;cursor:default;background:transparent;border-color:var(--line);color:var(--muted)}
+
+.g-cnt{padding-top:0}
+.g-cnt .lgd{float:left;width:100%;padding-top:16px;margin:0}
+.g-cnt .lgd+*{clear:both}
+.today{font-size:.88rem;color:var(--muted)}
+.today b{font-family:var(--f-display);font-size:1.15rem;color:var(--fg);font-weight:700;letter-spacing:.01em}
+.seg.txt label{font-family:var(--f-body);font-weight:800;font-size:.9rem}
+.seg{display:grid;grid-template-columns:repeat(var(--cols,5),1fr);gap:4px;background:var(--sunk);border:1px solid var(--line);border-radius:9px;padding:3px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{display:grid;place-items:center;height:36px;border-radius:6px;font-family:var(--f-mono);font-weight:600;color:var(--muted);cursor:pointer;transition:background .12s,color .12s}
+.seg label:hover{color:var(--fg)}
+.seg input:checked+label{background:var(--meadow);color:var(--on-accent)}
+.seg input:focus-visible+label{outline:2px solid var(--hay);outline-offset:1px}
+
+.feedref{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.feedref li{display:grid;grid-template-columns:22px 1fr auto auto;gap:10px;align-items:center;font-size:.9rem;padding:3px 0}
+.feedref .ico{width:22px;height:22px}
+.feedref .x{font-family:var(--f-mono);font-size:.78rem;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.feedref .x b{color:var(--fg);font-weight:600}
+.feedref .ratio{min-width:58px}
+
+details{padding:12px 0 6px}
+summary{cursor:pointer;font-size:.85rem;font-weight:700;color:var(--muted);list-style:none;display:flex;align-items:center;gap:6px}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"";width:6px;height:6px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s;margin-right:2px}
+details[open] summary::before{transform:rotate(45deg)}
+.settings{display:grid;gap:14px;margin-top:12px}
+.field{display:grid;gap:6px}
+.field input,.efftbl input,.feedset input{border:1px solid var(--line);background:var(--sunk);border-radius:7px;padding:6px 8px;font-family:var(--f-mono);font-size:.88rem;width:100%;text-align:center}
+.feedset{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px 8px;align-items:center;font-size:.85rem}
+.feedset .h{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);text-align:center}
+.efftbl{overflow-x:auto;margin:0 -2px}
+.efftbl table{border-collapse:collapse;font-size:.8rem;width:100%}
+.efftbl th{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);padding:4px;text-align:center}
+.efftbl td{padding:3px}
+.efftbl td:first-child{font-family:var(--f-mono);color:var(--muted);text-align:center}
+.efftbl input{min-width:58px;padding:4px}
+.hint{font-size:.8rem;color:var(--muted);margin:0;line-height:1.45}
+
+/* výsledky */
+.res{min-width:0;display:grid;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.plan-h{padding:18px 20px;display:grid;gap:14px}
+.plan-top{display:flex;justify-content:space-between;align-items:flex-end;gap:10px 16px;flex-wrap:wrap}
+.eyebrow{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--meadow-ink)}
+.plan-h h2{font-family:var(--f-display);font-weight:700;font-size:2rem;line-height:1.05;margin:2px 0 0}
+.cost{display:flex;align-items:baseline;gap:6px;background:var(--hay-soft);border-radius:10px;padding:4px 14px 6px}
+.cost .v{font-family:var(--f-display);font-weight:700;font-size:2.2rem;line-height:1.05;font-variant-numeric:tabular-nums}
+.cost .u{font-weight:800;color:var(--hay-ink);font-size:.9rem}
+.prep{display:grid;gap:8px}
+.chips{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+.chips li{display:inline-flex;align-items:center;gap:7px;background:var(--sunk);border-radius:999px;padding:5px 13px 5px 8px;font-weight:700;font-size:.92rem}
+.chips li b{font-family:var(--f-mono);font-weight:600}
+.chips .ico{width:20px;height:20px}
+.chips li.pp{background:var(--meadow-soft);color:var(--meadow-ink);padding-left:10px}
+
+.btn{border:0;background:var(--meadow);color:var(--on-accent);font-weight:800;padding:9px 14px;border-radius:8px;display:inline-flex;gap:8px;align-items:center;justify-content:center}
+.btn:hover{filter:brightness(1.07)}
+.btn:disabled{opacity:.45;cursor:default;filter:none}
+
+.seq{padding:4px 16px 10px}
+.seq-h{display:flex;justify-content:space-between;align-items:center;gap:6px 12px;padding:12px 4px 4px;flex-wrap:wrap}
+.grp-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:14px 6px 4px;border-top:1px solid var(--line);margin-top:6px}
+.grp-h.first{border-top:0;margin-top:0}
+.lvname{font-family:var(--f-display);font-weight:700;font-size:1.25rem;line-height:1;display:flex;align-items:center;gap:7px}
+.lvname .ok{width:17px;height:17px;border-radius:50%;background:var(--meadow);color:var(--on-accent);display:none;place-items:center}
+.lvname .ok svg{width:10px;height:10px}
+.grp-h.complete .lvname .ok{display:grid}
+.lvmeta{font-family:var(--f-mono);font-size:.76rem;color:var(--muted);white-space:nowrap}
+ol.rows{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.row{width:100%;display:grid;grid-template-columns:30px 24px minmax(0,1fr) auto;gap:12px;align-items:center;padding:7px 8px;border:0;background:transparent;text-align:left;border-radius:9px;-webkit-tap-highlight-color:transparent;transition:background .12s,opacity .12s}
+.row .n{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-mono);font-weight:600;font-size:.82rem;border:1.5px solid var(--line);color:var(--muted);background:var(--panel)}
+.row .ico{width:24px;height:24px}
+.row .nm{display:flex;align-items:center;gap:8px;font-weight:800;min-width:0}
+.pchip{font-family:var(--f-mono);font-size:.7rem;font-weight:600;background:var(--meadow);color:var(--on-accent);border-radius:4px;padding:1px 5px;line-height:1.4}
+.row .e{font-family:var(--f-mono);font-size:.84rem;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.row.p .n{border-color:var(--meadow);color:var(--meadow-ink)}
+.seq-sub{font-size:.8rem;color:var(--faint)}
+
+.msg{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:10px}
+.msg.err{border-color:transparent;background:var(--bad-soft)}
+.msg h2{font-family:var(--f-display);font-size:1.5rem;margin:0;color:var(--bad)}
+.msg p{margin:0;color:var(--fg)}
+.msg .btn{justify-self:start}
+.calc{opacity:.55;transition:opacity .1s}
+
+@media (max-width:860px){
+  .layout{grid-template-columns:minmax(0,1fr);gap:16px}
+  .ctrl{position:static;padding:4px 16px 8px}
+  .ctrl form{display:grid;grid-template-columns:1fr 1fr;column-gap:20px}
+  .ctrl details,.ctrl .g-ref{grid-column:1/-1}
+  .ctrl .g-start,.ctrl .g-cnt,.ctrl .g-p,.ctrl .g-n{border-bottom:1px solid var(--line)}
+  .feedref{grid-template-columns:1fr 1fr;column-gap:20px}
+}
+@media (max-width:560px){
+  .picks{grid-template-columns:1fr}
+  .intro-h h1{font-size:2.3rem}
+  .pick{padding:18px}
+  .pick .pn{font-size:2rem}
+  .top{gap:10px}
+  .top>div{min-width:0}
+  .top p{font-size:.82rem}
+  .top h1{font-size:1.65rem;white-space:nowrap}
+  .mswitch{padding:5px 11px 5px 6px;font-size:.88rem}
+  .mswitch small{display:none}
+  .app{padding-block:18px 36px}
+  .top{margin-bottom:16px}
+  .top h1{font-size:1.9rem}
+  .mark{width:40px;height:40px}
+  .ctrl form{column-gap:14px}
+  .ctrl .g-start,.ctrl .g-cnt{grid-column:1/-1}
+  .g-start .val{display:none}
+  .seg label{height:34px;font-size:.9rem}
+  .feedref{grid-template-columns:1fr 1fr;column-gap:14px}
+  .feedref li{grid-template-columns:20px 1fr auto;gap:7px}
+  .feedref .x:not(.ratio),.g-ref .val{display:none}
+  .ctrl .g-ref{display:none}
+  .feedref .ratio{min-width:0}
+  .plan-h{padding:14px}
+  .plan-h h2{font-size:1.7rem}
+  .cost .v{font-size:1.8rem}
+  .chips li{font-size:.86rem;padding:4px 11px 4px 7px}
+  .seq{padding:2px 10px 8px}
+  .row{grid-template-columns:28px 22px minmax(0,1fr) auto;gap:10px;padding:7px 6px}
+  .row .ico{width:22px;height:22px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
-<div class="wrap">
-  <header>
-    <h1>Krmení mounta</h1>
-    <p class="sub">Zadej levely na dnešní den a kolik probiotik chceš použít. Kalkulačka najde nejlevnější krmení v seně a vypíše přesné pořadí.</p>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-seno" viewBox="0 0 24 24"><path d="M5 7.5c0-1.4 3.1-2.5 7-2.5s7 1.1 7 2.5v9c0 1.4-3.1 2.5-7 2.5s-7-1.1-7-2.5z" fill="var(--c-seno)"/><path d="M5 7.5c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5M8 10v8.4M12 10.2v8.8M16 10v8.4" fill="none" stroke="var(--hay-ink)" stroke-opacity=".45" stroke-width="1.1"/><path d="M5 13.2c2 1 12 1 14 0" fill="none" stroke="var(--c-jablko)" stroke-width="1.6"/></symbol>
+    <symbol id="i-mrkev" viewBox="0 0 24 24"><path d="M15.6 7.3c-1.6-1.2-3.6-.5-4.9.8L4.3 18.8c-.6 1 .5 1.9 1.3 1.2l10.6-7.4c1.5-1.2 1.6-3.9-.6-5.3z" fill="var(--c-mrkev)"/><path d="M9.5 12.5l1.6 1.2M7.6 15.7l1.3 1" stroke="var(--panel)" stroke-opacity=".55" stroke-width="1.1" stroke-linecap="round"/><path d="M16 7.6c.2-2 1.3-3.4 2.8-4M16.6 8.1c1.3-1.4 3-1.9 4.6-1.5M15.7 7.4c-.4-1.6 0-3.2 1-4.4" fill="none" stroke="var(--c-leaf)" stroke-width="1.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-zensen" viewBox="0 0 24 24"><path d="M10.4 7.5c-.8 2.6-.6 5.4-1.6 8.2L6.6 20.3c-.2.5.4.9.8.5l2.9-3.5.9 3.6c.1.5.8.5.9 0l.8-3.4 2.9 3.4c.4.4 1 0 .8-.5l-2.3-4.7c-1-2.8-.8-5.6-1.6-8.2z" fill="var(--c-zensen)"/><path d="M11.4 9.5c.7.2 1.2.1 1.6-.1M10.9 12.4c.9.2 1.6.1 2.2-.2" stroke="var(--panel)" stroke-opacity=".5" stroke-width="1" stroke-linecap="round"/><path d="M12 7.5V4.2M12 5c-1.3-1.5-2.8-1.6-3.8-1.1M12 5c1.3-1.5 2.8-1.6 3.8-1.1" fill="none" stroke="var(--c-leaf)" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="3.4" r="1.1" fill="var(--c-jablko)"/></symbol>
+    <symbol id="i-jablko" viewBox="0 0 24 24"><path d="M12 8.2c-1.6-1.3-6.4-1.6-6.4 3.8 0 4.3 3 8.2 5 7.6.7-.2 1-.4 1.4-.4s.7.2 1.4.4c2 .6 5-3.3 5-7.6 0-5.4-4.8-5.1-6.4-3.8z" fill="var(--c-jablko)"/><path d="M12 8.3c0-1.8.5-3.2 1.6-4.3" fill="none" stroke="var(--hay-ink)" stroke-width="1.4" stroke-linecap="round"/><path d="M13.4 5.6c1.6-1.6 3.6-1.5 4.4-1-.7 1.6-2.6 2.4-4.4 1z" fill="var(--c-leaf)"/><path d="M8.3 11c.3-1 1-1.6 1.8-1.8" fill="none" stroke="var(--panel)" stroke-opacity=".5" stroke-width="1.2" stroke-linecap="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-astrallia" viewBox="0 0 24 24"><path d="M14.5 3.2a8.8 8.8 0 1 0 6.3 14.6A7.6 7.6 0 1 1 14.5 3.2z" fill="var(--meadow)"/><path d="M18.6 2.6l.8 2.1 2.1.8-2.1.8-.8 2.1-.8-2.1-2.1-.8 2.1-.8z" fill="var(--hay)"/></symbol>
+    <symbol id="i-stellaria" viewBox="0 0 24 24"><path d="M11 3l2 7 7 2-7 2-2 7-2-7-7-2 7-2z" fill="var(--hay)"/><path d="M19.5 2.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7zM19 15.5l.5 1.3 1.3.5-1.3.5-.5 1.3-.5-1.3-1.3-.5 1.3-.5z" fill="var(--meadow)"/></symbol>
+  </defs>
+</svg>
+
+<div class="intro" id="intro" hidden>
+  <div class="intro-in">
+    <div class="intro-h">
+      <div class="mark"><svg><use href="#i-seno"/></svg></div>
+      <h1>Krmení mounta</h1>
+      <p>Vyber svůj server.</p>
+    </div>
+    <div class="picks">
+      <button type="button" class="pick" data-mount="stellaria">
+        <svg class="pi" aria-hidden="true"><use href="#i-stellaria"/></svg>
+        <span class="pn">Stellaria</span>
+        <span class="pd">Bez snížení potřeby expu</span>
+        <span class="ps">Level 50: 1 200 exp · Level 150: 2 800 exp</span>
+        <span class="go">Vybrat →</span>
+      </button>
+      <button type="button" class="pick" data-mount="astrallia">
+        <svg class="pi" aria-hidden="true"><use href="#i-astrallia"/></svg>
+        <span class="pn">Astrallia</span>
+        <span class="pd">Potřeba expu snížená o 67 %</span>
+        <span class="ps">Level 50: 396 exp · Level 150: 924 exp</span>
+        <span class="go">Vybrat →</span>
+      </button>
+    </div>
+    <p class="intro-note">Volbu si stránka zapamatuje. Změnit ji jde kdykoli v aplikaci.</p>
+  </div>
+</div>
+
+<div class="app" id="app" hidden>
+  <header class="top">
+    <div class="mark"><svg><use href="#i-seno"/></svg></div>
+    <div>
+      <h1>Krmení mounta</h1>
+      <p>Nejlevnější denní krmení v seně, krok za krokem.</p>
+    </div>
+    <button type="button" class="mswitch" id="chgMount" title="Změnit server"><svg aria-hidden="true"><use href="#i-astrallia"/></svg><span id="mName">Astrallia</span><small>změnit</small></button>
   </header>
 
-  <form class="panel" id="frm">
-    <div class="form">
-      <label>Levely (od – do)
-        <div class="range"><input id="lvFrom" type="number" min="50" max="150" value="50" inputmode="numeric"><span>–</span><input id="lvTo" type="number" min="50" max="150" value="52" inputmode="numeric"></div>
-      </label>
-      <label for="maxP">Max probiotik za den<input id="maxP" type="number" min="0" max="9" value="3" inputmode="numeric"></label>
-      <label for="maxN">Max krmení za den<input id="maxN" type="number" min="1" max="10" value="10" inputmode="numeric"></label>
-      <button type="submit">Spočítat</button>
-    </div>
-    <details>
-      <summary>Nastavení krmiv a efektivity</summary>
-      <div class="settings">
-        <label for="mult" style="max-width:260px">Snížení potřeby expu (%)<input id="mult" type="number" min="0" max="99" value="67"></label>
-        <p class="hint">Potřeba levelu = (1200 + 16 × (level − 50)) × (100 − snížení) %, zaokrouhleno. Level 50 = 396 expů, level 150 = 924 expů.</p>
-        <div class="feeds" id="feeds"></div>
-        <div class="efftbl"><table id="eff"></table></div>
-        <p class="hint">Každý level dostane rezervu aspoň 5 expů nad potřebu. Přebytek expů nad potřebu levelu propadá. Probiotika se dávají na poslední krmení dne, kde nejvíc zvednou efektivitu.</p>
-      </div>
-    </details>
-  </form>
+  <div class="layout">
+    <aside class="ctrl">
+      <form id="frm" autocomplete="off">
+        <div class="grp g-start">
+          <div class="lbl-row"><label class="lbl" for="lvFrom">Aktuální level mounta</label><span class="val">50–150</span></div>
+          <input id="lvFrom" type="number" min="50" max="150" value="50" inputmode="numeric">
+        </div>
 
-  <div id="out" aria-live="polite"></div>
+        <fieldset class="grp g-cnt">
+          <legend class="lbl lgd">Kolik levelů dnes udělat</legend>
+          <div class="seg" id="segC" style="--cols:6"></div>
+        </fieldset>
+
+        <div class="grp g-p">
+          <label class="lbl" for="maxP">Probiotika za den (max)</label>
+          <input id="maxP" type="number" min="0" max="10" value="3" inputmode="numeric">
+        </div>
+
+        <div class="grp g-n">
+          <label class="lbl" for="maxN">Krmení za den (max)</label>
+          <input id="maxN" type="number" min="1" max="10" value="10" inputmode="numeric">
+        </div>
+
+        <div class="grp g-ref">
+          <div class="lbl-row"><span class="lbl">Krmiva</span><span class="val">expů · cena · expů za 1 seno</span></div>
+          <ul class="feedref" id="feedref"></ul>
+        </div>
+
+        <details>
+          <summary>Nastavení krmiv a efektivity</summary>
+          <div class="settings">
+            <fieldset class="field" style="border:0;margin:0;padding:0">
+              <legend class="lbl" style="padding:0;margin-bottom:6px">Server</legend>
+              <div class="seg txt" style="--cols:2">
+                <input type="radio" name="mount" id="mS" value="0"><label for="mS">Stellaria</label>
+                <input type="radio" name="mount" id="mA" value="67"><label for="mA">Astrallia</label>
+              </div>
+              <p class="hint">Stellaria je bez snížení, Astrallia má potřebu expu sníženou o 67 %.</p>
+            </fieldset>
+            <div class="field">
+              <label class="lbl" for="mult">Snížení potřeby expu (%)</label>
+              <input id="mult" type="number" min="0" max="99" value="67">
+              <p class="hint">Potřeba levelu = (1200 + 16 × (level − 50)) × (100 − snížení) %, zaokrouhleno.</p>
+            </div>
+            <div class="feedset" id="feedset"></div>
+            <div class="efftbl"><table id="eff"></table></div>
+            <p class="hint">Každý level dostane aspoň 5 expů nad potřebu. Přebytek nad potřebu propadá. Probiotika jdou vždy na poslední krmení dne, kde je efektivita nejnižší.</p>
+          </div>
+        </details>
+      </form>
+    </aside>
+
+    <main class="res" id="out" aria-live="polite"></main>
+  </div>
 </div>
 
 <script>
 const FEEDS=[
-  {id:"jablko",name:"Jablko",exp:512,cost:64,color:"#c0392b"},
-  {id:"zensen",name:"Ženšen",exp:256,cost:16,color:"#b9773a"},
-  {id:"mrkev",name:"Mrkev",exp:128,cost:4,color:"#e07b1f"},
-  {id:"seno",name:"Seno",exp:64,cost:1,color:"#c9a227"}
+  {id:"jablko",name:"Jablko",exp:512,cost:64},
+  {id:"zensen",name:"Ženšen",exp:256,cost:16},
+  {id:"mrkev",name:"Mrkev",exp:128,cost:4},
+  {id:"seno",name:"Seno",exp:64,cost:1}
 ];
 const EFF_P=[100,97.66,94.53,91.41,88.28,83.98,79.69,76.56,73.44,70.31];
 const EFF_N=[100,95.31,90.63,85.94,81.25,75.00,70.31,65.63,60.94,56.25];
+const RES=5, LMIN=50, LMAX=150;
 const $=id=>document.getElementById(id);
 const fmt=(x,d=1)=>x.toLocaleString("cs-CZ",{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtC=x=>fmt(x,x%1?1:0);
+const ico=(id,cls="ico")=>`<svg class="${cls}" aria-hidden="true"><use href="#i-${id}"/></svg>`;
 
-// nastavení krmiv
-$("feeds").innerHTML=FEEDS.map((f,i)=>`<div class="feed"><b>${f.name}</b>
-  <label for="fe${i}">Expy<input id="fe${i}" type="number" min="1" value="${f.exp}"></label>
-  <label for="fc${i}">Cena (seno)<input id="fc${i}" type="number" min="0" step="0.1" value="${f.cost}"></label></div>`).join("");
-$("eff").innerHTML=`<tr><th>Krmení</th>${EFF_P.map((_,i)=>`<th>${i+1}.</th>`).join("")}</tr>
-<tr><th>S probiotikem %</th>${EFF_P.map((v,i)=>`<td><input id="ep${i}" type="number" step="0.01" value="${v}"></td>`).join("")}</tr>
-<tr><th>Bez probiotika %</th>${EFF_N.map((v,i)=>`<td><input id="en${i}" type="number" step="0.01" value="${v}"></td>`).join("")}</tr>`;
+/* --- sestavení ovládání --- */
+$("segC").innerHTML=[1,2,3,4,5,6].map(v=>`<input type="radio" name="cnt" id="c${v}" value="${v}"${v===3?" checked":""}><label for="c${v}">${v}</label>`).join("");
+$("feedset").innerHTML=`<span></span><span class="h">Expy</span><span class="h">Cena (seno)</span>`+FEEDS.map((f,i)=>
+  `<span style="display:flex;align-items:center;gap:6px">${ico(f.id)}${f.name}</span>
+   <input id="fe${i}" type="number" min="1" value="${f.exp}" aria-label="${f.name} – expy">
+   <input id="fc${i}" type="number" min="0" step="0.1" value="${f.cost}" aria-label="${f.name} – cena v seně">`).join("");
+$("eff").innerHTML=`<tr><th>Krmení</th><th>S probiotikem %</th><th>Bez %</th></tr>`+
+  EFF_P.map((v,i)=>`<tr><td>${i+1}.</td><td><input id="ep${i}" type="number" step="0.01" value="${v}" aria-label="${i+1}. krmení s probiotikem"></td><td><input id="en${i}" type="number" step="0.01" value="${EFF_N[i]}" aria-label="${i+1}. krmení bez probiotika"></td></tr>`).join("");
+$("feedset").querySelectorAll(".ico").forEach(s=>{s.style.width="18px";s.style.height="18px"});
 
-const IDS=["lvFrom","lvTo","maxP","maxN","mult"];
-const RES=5;
-try{const s=JSON.parse(localStorage.getItem("krmeni-v1")||"{}");IDS.forEach(k=>{if(s[k]!=null)$(k).value=s[k]})}catch(e){}
+// vlastní tlačítka − / + (stejná ve všech prohlížečích i na mobilu)
+["lvFrom","maxP","maxN"].forEach(id=>{
+  const inp=$(id),w=document.createElement("div");w.className="num";
+  inp.parentNode.insertBefore(w,inp);
+  const mk=(t,d,l)=>{const b=document.createElement("button");b.type="button";b.className="sb";b.textContent=t;b.setAttribute("aria-label",l);
+    b.addEventListener("click",()=>{const v=(+inp.value||0)+d,mn=+inp.min,mx=+inp.max;inp.value=Math.min(mx,Math.max(mn,v));inp.dispatchEvent(new Event("input",{bubbles:true}))});return b};
+  w.append(mk("−",-1,"Ubrat"),inp,mk("+",1,"Přidat"));
+});
 
+/* --- uložené hodnoty (jen pohodlí, stránka funguje i bez nich) --- */
+const IDS=["lvFrom","maxP","maxN","mult"];
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+(()=>{const s=store.get("krmeni-v2",{});IDS.forEach(k=>{if(s[k]!=null)$(k).value=s[k]});if(s.cnt!=null&&$("c"+s.cnt))$("c"+s.cnt).checked=true})();
+const getCnt=()=>+(document.querySelector('input[name=cnt]:checked')||{value:3}).value;
+/* --- mount: Astrallia / Stellaria (úvodní obrazovka, přepínač v hlavičce a tlačítka v nastavení) --- */
+const MOUNTS={astrallia:{name:"Astrallia",mult:67},stellaria:{name:"Stellaria",mult:0}};
+const mountLabel=m=>m===67?"Astrallia":m===0?"Stellaria":`Vlastní (−${m} %)`;
+function syncMount(save=true){
+  const m=+$("mult").value;$("mA").checked=m===67;$("mS").checked=m===0;
+  const key=m===67?"astrallia":m===0?"stellaria":null;
+  if(key&&save)store.set("krmeni-mount",key);
+  const k=key||store.get("krmeni-mount","astrallia");
+  $("mName").textContent=mountLabel(m);
+  $("chgMount").querySelector("use").setAttribute("href","#i-"+(MOUNTS[k]?k:"astrallia"));
+  document.querySelectorAll(".pick").forEach(p=>p.classList.toggle("sel",p.dataset.mount===key));
+}
+function chooseMount(key){
+  const M=MOUNTS[key];if(!M)return;
+  store.set("krmeni-mount",key);$("mult").value=M.mult;syncMount();
+  $("intro").hidden=true;$("app").hidden=false;run();window.scrollTo(0,0);
+}
+document.querySelectorAll(".pick").forEach(p=>p.addEventListener("click",()=>chooseMount(p.dataset.mount)));
+$("chgMount").addEventListener("click",()=>{syncMount();$("app").hidden=true;$("intro").hidden=false;window.scrollTo(0,0)});
+
+function readFeeds(){return FEEDS.map((f,i)=>({...f,exp:+$("fe"+i).value||f.exp,cost:Math.max(0,+$("fc"+i).value||0)}))}
+function renderRef(feeds){
+  $("feedref").innerHTML=feeds.map(f=>`<li>${ico(f.id)}<span>${f.name}</span><span class="x"><b>${f.exp}</b> · ${fmtC(f.cost)} s</span><span class="x ratio">${f.cost?fmt(f.exp/f.cost,0):"–"}/s</span></li>`).join("");
+}
 function need(l,mult){return Math.round((1200+16*(l-50))*(100-mult)/100)}
 
-// optimalizace: pro každý počet krmení n a počet probiotik p projde všechna pořadí (DP se slučováním stavů)
+/* --- výpočet: pro každý počet krmení n a probiotik p projde všechna pořadí (DP se slučováním stavů a ořezáváním) --- */
 function solve(reqs,feeds,effN,effP,maxN,maxP){
-  let best=null;
+  let best=null;const maxExp=Math.max(...feeds.map(f=>f.exp)),total=reqs.reduce((a,c)=>a+c,0);
+  const rest=reqs.map((_,i)=>reqs.slice(i+1).reduce((a,c)=>a+c,0));
   for(let n=1;n<=maxN;n++){
     for(let p=0;p<=Math.min(maxP,n-1);p++){
       const eff=[];for(let i=0;i<n;i++)eff.push((i<n-p?effN[i]:effP[i])/100);
+      const suf=new Array(n+1).fill(0);for(let i=n-1;i>=0;i--)suf[i]=suf[i+1]+maxExp*eff[i];
+      if(suf[0]<total-1e-9)continue;
       let st=new Map();st.set("0|0",{lv:0,acc:0,c:0,sur:0,path:[]});
       for(let i=0;i<n;i++){
         const ns=new Map();
         for(const s of st.values()){
           if(s.lv===reqs.length)continue;
+          if(suf[i]<reqs[s.lv]-s.acc+rest[s.lv]-1e-9)continue;
+          if(best&&s.c>best.c+1e-9)continue;
           feeds.forEach((f,fi)=>{
             let a=s.acc+f.exp*eff[i],lv=s.lv,sur=s.sur;
             if(a>=reqs[lv]-1e-9){sur+=a-reqs[lv];lv++;a=0}
@@ -157,42 +432,82 @@ function solve(reqs,feeds,effN,effP,maxN,maxP){
   return best;
 }
 
+/* --- vykreslení --- */
+let cur=null;
 function run(){
-  const from=+$("lvFrom").value,to=+$("lvTo").value,maxP=Math.max(0,+$("maxP").value|0),
-        maxN=Math.min(10,Math.max(1,+$("maxN").value|0)),res=RES,mult=+$("mult").value||0;
-  try{localStorage.setItem("krmeni-v1",JSON.stringify(Object.fromEntries(IDS.map(k=>[k,$(k).value]))))}catch(e){}
-  const out=$("out");
-  if(!(from>=50&&to<=150&&from<=to)){out.innerHTML=`<div class="err">Zadej rozsah levelů mezi 50 a 150, kde „od“ není větší než „do“.</div>`;return}
-  const feeds=FEEDS.map((f,i)=>({...f,exp:+$("fe"+i).value||f.exp,cost:+$("fc"+i).value}));
-  const effP=EFF_P.map((v,i)=>+$("ep"+i).value),effN=EFF_N.map((v,i)=>+$("en"+i).value);
+  const from=Math.round(+$("lvFrom").value),cntL=getCnt(),to=Math.min(LMAX,from+cntL-1);
+  const maxP=Math.min(10,Math.max(0,Math.round(+$("maxP").value)||0)),maxN=Math.min(10,Math.max(1,Math.round(+$("maxN").value)||10)),mult=+$("mult").value||0;
+  const feeds=readFeeds();renderRef(feeds);
+  store.set("krmeni-v2",{lvFrom:$("lvFrom").value,maxP:$("maxP").value,maxN:$("maxN").value,mult:$("mult").value,cnt:cntL});
+  const out=$("out");cur=null;
+  if(!(from>=LMIN&&from<=LMAX)){
+    out.innerHTML=`<div class="msg err"><h2>Neplatný level</h2><p>Aktuální level musí být mezi ${LMIN} a ${LMAX}.</p></div>`;return}
+
+  const effP=EFF_P.map((v,i)=>+$("ep"+i).value||v),effN=EFF_N.map((v,i)=>+$("en"+i).value||v);
   const levels=[];for(let l=from;l<=to;l++)levels.push(l);
   const base=levels.map(l=>need(l,mult));
-  const b=solve(base.map(r=>r+res),feeds,effN,effP,maxN,maxP);
-  if(!b){out.innerHTML=`<div class="err">Levely ${from}–${to} se do ${maxN} krmení za den nevejdou. Zkrať rozsah, nebo přidej krmení či probiotika.</div>`;return}
-  let totalExp=0;
-  const cards=levels.map((l,li)=>{
-    const steps=b.path.filter(s=>s[1]===li);
-    let ex=0,cost=0,pc=0;
-    const items=steps.map(([fi,,i])=>{
-      const f=feeds[fi],isP=i>=b.n-b.p,e=f.exp*b.eff[i];ex+=e;cost+=f.cost;if(isP)pc++;
-      return `<li class="step${isP?" p":""}"><span class="n">${i+1}.</span><span class="dot" style="background:${f.color}"></span><span class="f">${f.name}</span>${isP?'<span class="pchip">+P</span>':""}<span class="e">${fmt(e)}<small>expů</small></span></li>`;
-    }).join("");
-    totalExp+=ex;
-    return `<article class="lvl"><div class="lvl-h"><h2>Level ${l}</h2>
-      <div class="meta"><span title="získané / potřebné expy">${fmt(ex,0)}/${base[li]}</span><span class="c">${fmt(cost,cost%1?1:0)} <small>sena</small></span>${pc?`<span class="pp">${pc}×P</span>`:""}</div></div>
-      <ol class="steps">${items}</ol></article>`;
-  }).join("");
-  out.innerHTML=`<div class="summary">
-    <div class="stat hay"><div class="k">Cena celkem</div><div class="v">${fmt(b.c,b.c%1?1:0)} sena</div></div>
-    <div class="stat"><div class="k">Probiotika</div><div class="v">${b.p}</div></div>
-    <div class="stat"><div class="k">Krmení</div><div class="v">${b.n} / ${maxN}</div></div>
-    <div class="stat"><div class="k">Expy získáš / potřeba</div><div class="v">${fmt(totalExp,0)} / ${base.reduce((a,c)=>a+c,0)}</div></div>
-  </div>
-  <p class="legend"><span>Číslo = pořadí krmení v daném dni.</span><span><span class="pchip">+P</span> použij probiotikum</span></p>
-  <div class="levels">${cards}</div>`;
+  const b=solve(base.map(r=>r+RES),feeds,effN,effP,maxN,maxP);
+  if(!b){
+    let fit=0;for(let k=levels.length-1;k>=1;k--){if(solve(base.slice(0,k).map(r=>r+RES),feeds,effN,effP,maxN,maxP)){fit=k;break}}
+    const rng=fit?`Level ${from}${fit>1?"–"+(from+fit-1):""}`:"";
+    out.innerHTML=`<div class="msg err"><h2>Do jednoho dne se to nevejde</h2>
+      <p>Levely ${from}–${to} nejdou splnit s ${maxN} krmeními a ${maxP} probiotiky za den.${fit?` Nejvíc se vejde <b>${rng}</b>.`:""}</p>
+      ${fit?`<button class="btn" type="button" id="useFit" data-n="${fit}">Udělat dnes ${fit} ${fit===1?"level":fit<5?"levely":"levelů"}</button>`:""}</div>`;
+    const u=$("useFit");if(u)u.onclick=()=>{$("c"+u.dataset.n).checked=true;run()};
+    return;
+  }
+
+  const seq=b.path.map(([fi,lv,i])=>{const f=feeds[fi];return {i,fi,lv,f,isP:i>=b.n-b.p,e:f.exp*b.eff[i]}});
+  seq.forEach((s,k)=>{s.last=!seq[k+1]||seq[k+1].lv!==s.lv});
+  const lvInfo=levels.map((l,li)=>{const st=seq.filter(s=>s.lv===li);return {l,need:base[li],ex:st.reduce((a,s)=>a+s.e,0),cost:st.reduce((a,s)=>a+s.f.cost,0),steps:st}});
+  cur={seq,lvInfo,n:b.n,to};
+
+  const cnt={};seq.forEach(s=>cnt[s.fi]=(cnt[s.fi]||0)+1);
+  const chips=feeds.map((f,fi)=>cnt[fi]?`<li>${ico(f.id)}<b>${cnt[fi]}×</b>${f.name}</li>`:"").join("")+
+    (b.p?`<li class="pp"><span class="pchip">+P</span><b>${b.p}×</b>probiotikum</li>`:"");
+
+  const groups=lvInfo.map((L,li)=>`
+    <div class="grp-h${li?"":" first"}" data-lv="${li}"><span class="lvname">Level ${L.l}</span>
+      <span class="lvmeta">${fmt(L.ex,0)} / ${fmt(L.need,0)} exp · ${fmtC(L.cost)} sena</span></div>
+    <ol class="rows">${L.steps.map(s=>`<li class="row${s.isP?" p":""}">
+      <span class="n">${s.i+1}</span>${ico(s.f.id)}
+      <span class="nm"><span>${s.f.name}</span>${s.isP?'<span class="pchip">+P</span>':""}</span>
+      <span class="e">+${fmt(s.e)} exp</span></li>`).join("")}</ol>`).join("");
+
+  out.innerHTML=`<section class="card plan-h">
+      <div class="plan-top">
+        <div><div class="eyebrow">Plán na den · ${b.n} krmení</div><h2><span class="mn">${mountLabel(mult)}</span><span class="sep">·</span>Level ${from}${to>from?"–"+to:""}</h2></div>
+        <div class="cost" title="cena krmiva v seně"><span class="v">${fmtC(b.c)}</span><span class="u">sena</span></div>
+      </div>
+      <div class="prep"><span class="lbl">Připrav si</span><ul class="chips">${chips}</ul></div>
+    </section>
+    <section class="card seq">
+      <div class="seq-h"><span class="lbl">Pořadí krmení</span><span class="seq-sub">krm přesně v tomto pořadí</span></div>
+      ${groups}
+    </section>`;
 }
-$("frm").addEventListener("submit",e=>{e.preventDefault();run()});
-run();
+
+/* --- živý přepočet --- */
+let tm;
+$("frm").addEventListener("input",e=>{
+  if(e.target.name==="cnt"||e.target.name==="mount")return;
+  if(e.target.id==="mult")syncMount();
+  clearTimeout(tm);$("out").classList.add("calc");
+  tm=setTimeout(()=>{run();$("out").classList.remove("calc")},180);
+});
+$("frm").addEventListener("change",e=>{
+  if(e.target.name==="mount"){$("mult").value=e.target.value;syncMount()}
+  if(e.target.name==="cnt"||e.target.name==="mount"){clearTimeout(tm);run();$("out").classList.remove("calc")}
+});
+$("frm").addEventListener("submit",e=>e.preventDefault());
+
+/* --- start: bez uložené volby ukáže úvodní obrazovku --- */
+(()=>{const saved=store.get("krmeni-mount",null);
+  if(saved&&MOUNTS[saved]){
+    if(store.get("krmeni-v2",null)==null)$("mult").value=MOUNTS[saved].mult;
+    syncMount();$("app").hidden=false;run();
+  }else{$("intro").hidden=false;syncMount(false)}
+})();
 </script>
 
 </body></html>
